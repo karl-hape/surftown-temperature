@@ -1,6 +1,23 @@
-- name: Wasser- und Wetterdaten abrufen
+name: Surftown Wassertemperatur
+
+on:
+  schedule:
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Wasser- und Wetterdaten abrufen
         run: |
-          # 1. Wassertemperatur Surftown (|| true verhindert den GitHub-Absturz bei Timeout)
+          # 1. Wassertemperatur Surftown (|| true verhindert Absturz bei Timeout)
           SURF_URL="https://surftown.de/de/opening-infos.json"
           RESPONSE=$(curl -s -m 15 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0" -H "Accept: application/json" -H "Referer: https://surftown.de/" "$SURF_URL" || true)
           
@@ -57,3 +74,11 @@
           fi
           
           echo "$zeitstempel; $temp_clean; $w_temp; $w_hum; $w_wind; $w_dir; $w_cond" >> "$FILE"
+
+      - name: Ergebnis ins Repository committen
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add wassertemperatur.csv
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update Wetter und Wasser (CSV)"
+          git push
