@@ -67,7 +67,7 @@ jobs:
           
           # Header anlegen, falls die Datei noch nicht existiert
           if [ ! -f "$FILE" ]; then
-            echo "Datum Uhrzeit; Wassertemp °C; MUC Temp °C; Humidity %; Windstärke km/h; Windrichtung; WMO-Wettercode" > "$FILE"
+            echo "Datum Uhrzeit; Wassertemperatur °C; Lufttemperatur °C; Luftfeuchte %; Windstärke km/h; Windrichtung; WMO-Wettercode" > "$FILE"
           fi
           
           # Werte exakt mit Semikolon getrennt anfügen
