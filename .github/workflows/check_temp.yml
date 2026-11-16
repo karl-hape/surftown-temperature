@@ -16,18 +16,20 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
-      - name: Python einrichten
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Playwright und Chromium installieren
+      - name: Temperatur via API abrufen und speichern
         run: |
-          pip install playwright
-          playwright install chromium
-
-      - name: Python-Skript ausführen
-        run: python scraper.py
+          # Die direkte JSON-URL von Surftown
+          API_URL="https://surftown.de/de/opening-infos.json"
+          
+          # JSON mit curl abrufen und den Wert für waterTemperature mit jq extrahieren
+          temp_raw=$(curl -s "$API_URL" | jq -r '.waterTemperature')
+          
+          # Das "° C" sowie evtl. Leerzeichen entfernen
+          temp_clean=$(echo "$temp_raw" | sed 's/° C//g' | xargs)
+          
+          # Zeitstempel generieren und in die Textdatei schreiben
+          zeitstempel=$(date +'%Y-%m-%d %H:%M:%S')
+          echo "$zeitstempel - $temp_clean" >> wassertemperatur.txt
 
       - name: Ergebnis ins Repository committen
         run: |
