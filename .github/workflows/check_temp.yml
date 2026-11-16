@@ -27,7 +27,6 @@ jobs:
           temp_clean=$(echo "$temp_raw" | sed 's/° C//g' | xargs)
 
           # 2. Wetter Flughafen München (Open-Meteo API)
-          # Koordinaten MUC: Lat 48.3538, Lon 11.7861
           WEATHER_URL="https://api.open-meteo.com/v1/forecast?latitude=48.3538&longitude=11.7861&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m"
           w_json=$(curl -s "$WEATHER_URL")
           
@@ -36,10 +35,8 @@ jobs:
           w_wind=$(echo "$w_json" | jq -r '.current.wind_speed_10m')
           w_code=$(echo "$w_json" | jq -r '.current.weather_code')
           
-          # Windrichtung runden für die Umrechnung
           w_dir_deg=$(echo "$w_json" | jq -r '.current.wind_direction_10m | round')
           
-          # WMO-Wettercode in deutschen Text umwandeln
           case $w_code in
             0) w_cond="Sonnig/Klar" ;;
             1|2|3) w_cond="Bewölkt" ;;
@@ -50,7 +47,6 @@ jobs:
             *) w_cond="Unbekannt" ;;
           esac
 
-          # Windrichtung von Grad (0-360) in Himmelsrichtung umwandeln
           val=$(( (w_dir_deg + 22) / 45 ))
           case $val in
             0|8) w_dir="N" ;;
@@ -63,16 +59,24 @@ jobs:
             7) w_dir="NW" ;;
           esac
 
-          # 3. Zusammenbauen und in Textdatei schreiben
-          zeitstempel=$(date +'%Y-%m-%d %H:%M:%S')
+          # 3. CSV-Formatierung und Speicherung
+          # EU-Datumsformat: DD.MM.YYYY HH:MM:SS
+          zeitstempel=$(date +'%d.%m.%Y %H:%M:%S')
           
-          # Format: 2026-11-16 13:13:39 | Wasser: 9 | MUC: 12.5°C, 85%, Wind: 14km/h (SW), Bewölkt
-          echo "$zeitstempel | Wasser: $temp_clean | MUC: ${w_temp}°C, ${w_hum}%, Wind: ${w_wind}km/h ($w_dir), $w_cond" >> wassertemperatur.txt
+          FILE="wassertemperatur.csv"
+          
+          # Header anlegen, falls die Datei noch nicht existiert
+          if [ ! -f "$FILE" ]; then
+            echo "Datum Uhrzeit; Wassertemp °C; MUC Temp °C; Humidity %; Windstärke km/h; Windrichtung; WMO-Wettercode" > "$FILE"
+          fi
+          
+          # Werte exakt mit Semikolon getrennt anfügen
+          echo "$zeitstempel; $temp_clean; $w_temp; $w_hum; $w_wind; $w_dir; $w_cond" >> "$FILE"
 
       - name: Ergebnis ins Repository committen
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add wassertemperatur.txt
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update Wetter und Wasser"
+          git add wassertemperatur.csv
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update Wetter und Wasser (CSV)"
           git push
