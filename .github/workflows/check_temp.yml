@@ -1,25 +1,8 @@
-name: Surftown Wassertemperatur
-
-on:
-  schedule:
-    - cron: '0 0,6,12,18 * * *'
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Repository auschecken
-        uses: actions/checkout@v4
-
-      - name: Wasser- und Wetterdaten abrufen
+- name: Wasser- und Wetterdaten abrufen
         run: |
-          # 1. Wassertemperatur Surftown (mit 15s Timeout: -m 15)
+          # 1. Wassertemperatur Surftown (|| true verhindert den GitHub-Absturz bei Timeout)
           SURF_URL="https://surftown.de/de/opening-infos.json"
-          RESPONSE=$(curl -s -m 15 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0" -H "Accept: application/json" -H "Referer: https://surftown.de/" "$SURF_URL")
+          RESPONSE=$(curl -s -m 15 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0" -H "Accept: application/json" -H "Referer: https://surftown.de/" "$SURF_URL" || true)
           
           if [ -z "$RESPONSE" ] || ! echo "$RESPONSE" | jq . >/dev/null 2>&1; then
             echo "Warnung: Surftown API hat einen Timeout (Code 28) oder blockiert."
@@ -29,9 +12,9 @@ jobs:
             temp_clean=$(echo "$temp_raw" | sed 's/° C//g' | xargs)
           fi
 
-          # 2. Wetter Flughafen München (Open-Meteo API, ebenfalls mit 15s Timeout)
+          # 2. Wetter Flughafen München (Open-Meteo API)
           WEATHER_URL="https://api.open-meteo.com/v1/forecast?latitude=48.3538&longitude=11.7861&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m"
-          w_json=$(curl -s -m 15 "$WEATHER_URL")
+          w_json=$(curl -s -m 15 "$WEATHER_URL" || true)
           
           if [ -z "$w_json" ]; then
             w_temp="-"; w_hum="-"; w_wind="-"; w_dir="-"; w_cond="Timeout"
@@ -69,17 +52,8 @@ jobs:
           zeitstempel=$(date +'%d.%m.%Y %H:%M:%S')
           FILE="wassertemperatur.csv"
           
-          # Hier steht DEIN angepasster Header!
           if [ ! -f "$FILE" ]; then
             echo "Datum Uhrzeit; Wassertemp °C; MUC Temp °C; Humidity %; Windstärke km/h; Windrichtung; WMO-Wettercode" > "$FILE"
           fi
           
           echo "$zeitstempel; $temp_clean; $w_temp; $w_hum; $w_wind; $w_dir; $w_cond" >> "$FILE"
-
-      - name: Ergebnis ins Repository committen
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add wassertemperatur.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update Wetter und Wasser (CSV)"
-          git push
