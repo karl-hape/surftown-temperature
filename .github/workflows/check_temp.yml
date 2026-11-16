@@ -1,0 +1,39 @@
+name: Surftown Wassertemperatur
+
+on:
+  schedule:
+    # Läuft alle 6 Stunden (UTC-Zeit)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Erlaubt den manuellen Start über die Weboberfläche
+
+permissions:
+  contents: write # Notwendig, damit der Bot die Textdatei ins Repo pushen darf
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Playwright und Chromium installieren
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Python-Skript ausführen
+        run: python scraper.py
+
+      - name: Ergebnis ins Repository committen
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add wassertemperatur.txt
+          # Verhindert einen Fehler, falls sich die Datei aus irgendeinem Grund nicht geändert hat
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update Wassertemperatur"
+          git push
