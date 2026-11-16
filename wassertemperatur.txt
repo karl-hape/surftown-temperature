@@ -1,5 +1,0 @@
-2026-11-16 11:07:46 - Fehler beim Auslesen
-2026-11-16 11:34:31 - unbekannt
-2026-11-16 13:13:39 - 9
-2026-11-16 14:00:04 | Wasser: 9 | MUC: 10.9°C, 65%, Wind: 31.0km/h (W), Bewölkt
-Datum Uhrzeit; Wassertemp °C; MUC Temp °C; Humidity %; Windstärke km/h; Windrichtung; WMO-Wettercode
