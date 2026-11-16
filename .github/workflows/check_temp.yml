@@ -2,7 +2,8 @@ name: Surftown Wassertemperatur
 
 on:
   schedule:
-    - cron: '0 0,6,12,18 * * *'
+    # Startet um UTC 05:26, 11:26, 17:26, 23:26 (München Winterzeit: 06:26, 12:26, 18:26, 00:26)
+    - cron: '26 5,11,17,23 * * *'
   workflow_dispatch:
 
 permissions:
