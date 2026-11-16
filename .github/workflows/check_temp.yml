@@ -2,12 +2,11 @@ name: Surftown Wassertemperatur
 
 on:
   schedule:
-    # Läuft alle 6 Stunden (UTC-Zeit)
     - cron: '0 */6 * * *'
-  workflow_dispatch: # Erlaubt den manuellen Start über die Weboberfläche
+  workflow_dispatch:
 
 permissions:
-  contents: write # Notwendig, damit der Bot die Textdatei ins Repo pushen darf
+  contents: write
 
 jobs:
   scrape:
@@ -18,16 +17,23 @@ jobs:
 
       - name: Temperatur via API abrufen und speichern
         run: |
-          # Die direkte JSON-URL von Surftown
           API_URL="https://surftown.de/de/opening-infos.json"
           
-          # JSON mit curl abrufen und den Wert für waterTemperature mit jq extrahieren
-          temp_raw=$(curl -s "$API_URL" | jq -r '.waterTemperature')
+          # curl als Chrome Browser tarnen und Referer mitsenden, um Bot-Schutz zu umgehen
+          RESPONSE=$(curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json" -H "Referer: https://surftown.de/" -H "Accept-Language: de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7" "$API_URL")
           
-          # Das "° C" sowie evtl. Leerzeichen entfernen
+          # Prüfen, ob die Antwort gültiges JSON ist
+          if ! echo "$RESPONSE" | jq . >/dev/null 2>&1; then
+            echo "Fehler: Die API hat kein gültiges JSON zurückgegeben. Hier ist die rohe Antwort des Servers:"
+            echo "$RESPONSE"
+            exit 1
+          fi
+          
+          # Wert extrahieren und bereinigen
+          temp_raw=$(echo "$RESPONSE" | jq -r '.waterTemperature')
           temp_clean=$(echo "$temp_raw" | sed 's/° C//g' | xargs)
           
-          # Zeitstempel generieren und in die Textdatei schreiben
+          # Zeitstempel generieren und in Textdatei schreiben
           zeitstempel=$(date +'%Y-%m-%d %H:%M:%S')
           echo "$zeitstempel - $temp_clean" >> wassertemperatur.txt
 
@@ -36,6 +42,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add wassertemperatur.txt
-          # Verhindert einen Fehler, falls sich die Datei aus irgendeinem Grund nicht geändert hat
           git diff --quiet && git diff --staged --quiet || git commit -m "Update Wassertemperatur"
           git push
