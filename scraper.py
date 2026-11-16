@@ -6,7 +6,7 @@ def get_water_temp():
         # Headless Chromium starten
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        page.goto("https://surftown.de", wait_until="networkidle")
+        page.goto("https://surftown.de", wait_until="domcontentloaded")
 
         # 3 Sekunden warten, bis das JavaScript die Daten geladen hat
         page.wait_for_timeout(3000)
