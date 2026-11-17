@@ -26,3 +26,4 @@ Datum Uhrzeit; Wassertemperatur °C; Lufttemperatur °C; Luftfeuchte %; Windstä
 17.11.2026 05:08:18; 9; 6.9; 94; 12.6; S; Regen
 17.11.2026 12:32:42; 7; 10.0; 93; 11.1; S; Regen
 17.11.2026 14:42:08; 7; 12.6; 79; 28.6; SW; Regen
+17.11.2026 23:53:33; 7; -; -; -; -; Timeout
