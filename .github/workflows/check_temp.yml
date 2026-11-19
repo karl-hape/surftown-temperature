@@ -67,7 +67,7 @@ jobs:
           fi
 
           # 3. CSV-Formatierung und Speicherung
-          zeitstempel=$(date +'%d.%m.%Y %H:%M:%S')
+          zeitstempel=$(TZ="Europe/Berlin" date +'%d.%m.%Y %H:%M:%S')
           FILE="wassertemperatur.csv"
           
           if [ ! -f "$FILE" ]; then
