@@ -64,3 +64,4 @@ Datum Uhrzeit; Wassertemperatur °C; Lufttemperatur °C; Luftfeuchte %; Windstä
 26.11.2026 19:26:15; 4; -0.7; 95; 4.4; NW; Schnee
 27.11.2026 01:26:31; 4; -; -; -; -; Timeout
 27.11.2026 07:26:30; 4; -; -; -; -; Timeout
+27.11.2026 13:26:17; 4; 0.3; 82; 4.4; NO; Bewölkt
